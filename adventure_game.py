@@ -1,18 +1,16 @@
-# Imports
-from time import sleep  # Used to delay between messages
-import random  # Used for randomizing story outcomes
+from time import sleep
+import random
 
 # Global Variables
-user_name = ""     # Player's name
-achive = "null"    # Player's achievement
-score = 0          # Player's score
-run = True         # Control flag (not used)
+user_name = ""
+achive = "null"
+score = 0
+turns = 0
+max_turns = 3
+max_score = 100
 
-# Random choices to influence the path
 random_one = [1, 2]
 random_two = [1, 2, 3, 4]
-one = random.choice(random_one)     # Used in choose_two()
-three = random.choice(random_two)   # Used to determine asteroid outcome
 
 def intro():
     """Start of the game. Introduces the situation and asks the first main decision."""
@@ -27,14 +25,19 @@ def intro():
     print(f"{user_name} remembers a quote: 'No risk, no fun!'")
     sleep(1)
 
-    # Loop to handle invalid input until user enters '1' or '2'
+def play_round():
+    """Plays one round of the game"""
+    global score, turns
+    one = random.choice(random_one)
+    three = random.choice(random_two)
+
+    # Input choice
     choice = ""
     while choice not in ["1", "2"]:
         choice = input("1] Explore the asteroid \n2] Return to Earth\n")
         if choice not in ["1", "2"]:
             print("Invalid input. Please choose 1 or 2.")
 
-    # Random outcome based on 'three'
     if choice == "1":
         if three == 1:
             a_one()
@@ -44,26 +47,26 @@ def intro():
             a_three()
         elif three == 4:
             a_four()
-    elif choice == "2":
-        choose_two()
+    else:
+        choose_two(one)
 
-def choose_two():
-    """Handles the second major decision if player chooses to go back to Earth."""
+    turns += 1
+
+def choose_two(one):
     global score
-    score -= 5  # Penalty for refusing to explore the asteroid
-    print(f"Your score : {score} Point")
+    score -= 5  # Penalty
+    print(f"Your score: {score} Points")
     print(f"{user_name} decides to return to Earth and informs the boss.")
     sleep(1)
     print("Boss: 'No, you must explore the asteroid!'")
+    sleep(1)
 
-    # Input validation loop for choice
     choice = ""
     while choice not in ["1", "2"]:
         choice = input("1] Obey and go to the asteroid\n2] Disobey and return to Earth\n")
         if choice not in ["1", "2"]:
             print("Invalid input. Please choose 1 or 2.")
 
-    # Branching based on previously generated random number
     if choice == "1":
         e_one()
     else:
@@ -73,65 +76,79 @@ def choose_two():
             e_two_2()
 
 def e_one():
-    """Outcome: Obeys boss but is too late. Earth destroyed."""
     set_achivement("slow decision", f"{user_name} obeys but asteroid disappears and Earth is destroyed.")
 
 def e_two():
-    """Outcome: Disobeys and returns to Earth, sees asteroid."""
     set_achivement("big crowd", f"{user_name} returns and sees a huge asteroid over Earth!")
 
 def e_two_2():
-    """Outcome: Returns to Earth but it's already destroyed."""
     set_achivement("big crowd", f"{user_name} returns and sees Earth already destroyed.")
 
 def a_one():
-    """Outcome: Crashes into the asteroid, heroic ending."""
     set_achivement("the legend", f"{user_name} crashes into asteroid to save Earth. Boom!")
 
 def a_two():
-    """Outcome: Runs out of fuel and dies alone."""
     set_achivement("unlucky man", f"{user_name} runs out of fuel and dies in space.")
 
 def a_three():
-    """Outcome: Studies asteroid and becomes a famous hero."""
     set_achivement("famous hero", f"{user_name} studies the asteroid and becomes a hero.")
 
 def a_four():
-    """Outcome: Helps destroy asteroid, but dies on return."""
     set_achivement("unlucky hero", f"{user_name} helps destroy the asteroid, but dies on return.")
 
 def set_achivement(name, story):
-    """Sets the final achievement and score, prints story, asks to replay."""
     global achive, score
     achive = name
     print(story)
     sleep(1)
     print(f"Achievement: {achive}")
 
-    # Assign score based on ending. These are fixed values.
     scores = {
-        "big crowd": "10 points",
-        "unlucky man": "30 points",
-        "the legend": "100 points",
-        "unlucky hero": "50 points",
-        "famous hero": "40 points",
-        "slow decision": "20 points"
+        "big crowd": 10,
+        "unlucky man": 30,
+        "the legend": 100,
+        "unlucky hero": 50,
+        "famous hero": 40,
+        "slow decision": 20
     }
-    score = scores.get(achive, "0 points")
-    print(f"Score: {score}")
+    earned = scores.get(achive, 0)
+    score += earned
+    print(f"Score earned this round: {earned}")
+    print(f"Total score: {score}")
 
 def get_valid_input(prompt, valid_choices):
-    """Asks for input until valid response is given. Useful for y/n prompts."""
     choice = ""
     while choice not in valid_choices:
         choice = input(prompt).lower()
         if choice not in valid_choices:
-            # .join makes a readable string from list like ["y", "n"] => y, n
             print(f"Invalid input. Please choose from {', '.join(valid_choices)}.")
     return choice
 
-# Ask to play again (outside functions, but should be inside game loop ideally)
-again = get_valid_input("Do you want to play again? (y/n): ", ["y", "n"])
-
-# Start the game
+#  Game Start
+print(" Welcome to the Asteroid Adventure!")
 intro()
+
+# Game Loop with clear end condition
+while turns < max_turns and score < max_score:
+    print(f"\n Round {turns + 1}")
+    play_round()
+
+# End of Game
+print("\nGAME OVER ")
+print(f"Final score: {score}")
+print(f"Rounds played: {turns}")
+
+again = get_valid_input("Do you want to play again? (y/n): ", ["y", "n"])
+if again == "y":
+    # Reset values and restart
+    score = 0
+    turns = 0
+    intro()
+    while turns < max_turns and score < max_score:
+        print(f"\n Round {turns + 1}")
+        play_round()
+    print("\nGAME OVER AGAIN ")
+    print(f"Final score: {score}")
+    print(f"Rounds played: {turns}")
+else:
+    print("Thanks for playing!")
